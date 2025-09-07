@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthenticationService } from '../../services/authentication.service';
 import { LoginRequest } from '../../models/auth/requests/login-request';
 import {
@@ -16,15 +17,20 @@ import {
 })
 export class LoginComponent {
   loginForm: FormGroup;
+  returnUrl: string = '/conversations';
 
   constructor(
     private authService: AuthenticationService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.formBuilder.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(3)]],
     });
+
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/conversations';
   }
 
   isLoggedIn(): boolean {
@@ -42,6 +48,7 @@ export class LoginComponent {
         next: (response) => {
           if (response.succeeded) {
             console.log('Login successful');
+            this.router.navigateByUrl(this.returnUrl);
           } else {
             console.error('Login failed:', response.message);
           }

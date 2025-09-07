@@ -1,0 +1,23 @@
+<div class="header">Conversations</div>
+
+@if (error) {
+<div class="state error">{{ error }}</div>
+} @if (unauthorized) {
+<div class="state error">
+  You need to <a routerLink="/login">login</a> to view your conversations.
+</div>
+} @if (!error && !unauthorized) { @if (conversations().length === 0) {
+<div class="state">No conversations</div>
+}
+
+<div class="list">
+  @for (c of conversations(); track c.id) {
+  <app-conversation-item
+    [conversationId]="c.id"
+    [conversationTitle]="c.title"
+    [isSelected]="c.id === selectedConversationId"
+    (selected)="onSelect($event)"
+  ></app-conversation-item>
+  }
+</div>
+}

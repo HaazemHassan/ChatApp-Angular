@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import { ApiResponse } from '../models/api-response';
 import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { LoginRequest } from '../models/auth/requests/login-request';
@@ -7,12 +7,19 @@ import { RegisterRequest } from '../models/auth/requests/register-request';
 import { RefreshTokenRequest } from '../models/auth/requests/refresh-token-request';
 import { LoginResponse } from '../models/auth/responses/login-response';
 import { environment } from '../../environments/environment';
+import { User } from '../models/interfaces/userInterface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthenticationService {
-  constructor(private httpClient: HttpClient) {}
+  currentUser: User | null = null;
+
+  constructor(private httpClient: HttpClient) {
+    this.currentUser = this.getCurrentUser();
+  }
+
+  ngOnInit(): void {}
 
   login(credentials: LoginRequest): Observable<ApiResponse<LoginResponse>> {
     return this.httpClient
@@ -27,7 +34,12 @@ export class AuthenticationService {
             if (response.data.refreshToken) {
               document.cookie = `refreshToken=${response.data.refreshToken.token}; path=/`;
             }
+            localStorage.setItem(
+              'currentUser',
+              JSON.stringify(response.data.user)
+            );
           }
+
           return response;
         }),
         catchError((error) => {
@@ -51,6 +63,10 @@ export class AuthenticationService {
             if (response.data.refreshToken) {
               document.cookie = `refreshToken=${response.data.refreshToken.token}; path=/`;
             }
+            localStorage.setItem(
+              'currentUser',
+              JSON.stringify(response.data.user)
+            );
           }
           return response;
         }),
@@ -70,10 +86,12 @@ export class AuthenticationService {
       .pipe(
         tap(() => {
           this.clearTokens();
+          this.removeCurrentUser();
         }),
         catchError((error) => {
           console.error('Logout failed:', error);
           this.clearTokens();
+          this.removeCurrentUser();
           return throwError(() => error);
         })
       );
@@ -121,6 +139,11 @@ export class AuthenticationService {
     return localStorage.getItem('accessToken');
   }
 
+  getCurrentUser(): User | null {
+    const user = localStorage.getItem('currentUser');
+    return user ? (JSON.parse(user) as User) : null;
+  }
+
   getRefreshToken(): string | null {
     return this.getRefreshTokenFromCookie();
   }
@@ -145,5 +168,9 @@ export class AuthenticationService {
     localStorage.removeItem('accessToken');
     document.cookie =
       'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  }
+
+  removeCurrentUser(): void {
+    localStorage.removeItem('currentUser');
   }
 }

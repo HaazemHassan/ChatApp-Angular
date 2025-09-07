@@ -12,7 +12,7 @@ export class HomeComponent {
   constructor(
     private authService: AuthenticationService,
     private router: Router
-  ) {}
+  ) { }
 
   isAuthenticated(): boolean {
     return this.authService.isAuthenticated();
@@ -27,6 +27,10 @@ export class HomeComponent {
   }
 
   navigateToChat(): void {
-    this.router.navigate(['/chat']);
+    if (this.isAuthenticated())
+      this.router.navigate(['/conversations']);
+    else
+      this.router.navigate(['/login']);
+
   }
 }

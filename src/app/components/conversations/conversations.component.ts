@@ -38,13 +38,10 @@ export class ConversationsComponent implements OnInit {
     });
   }
 
-  onConversationSelected(conversationId: number) {
-    this.selectedConversation = this.conversations.find(c => c.id === conversationId) || null;
-  }
-
-  onOthersConversationSelected(conversation: UserConversation) {
+  onConversationSelected(conversation: UserConversation) {
     this.selectedConversation = conversation;
   }
+
 
   onSearchChanged(searchValue: string) {
 
@@ -73,8 +70,9 @@ export class ConversationsComponent implements OnInit {
           };
           this.others = [conversation];
         }
+      },
+      error: (error) => {
       }
     });
   }
-
 }

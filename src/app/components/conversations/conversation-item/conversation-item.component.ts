@@ -11,14 +11,12 @@ import { UserConversation } from '../../../models/conversations/responses/user-c
 export class ConversationItemComponent {
   conversation = input.required<UserConversation>();
   isSelected = input<boolean>(false);
-  selectedConversation = output<number>();
-  selectedOthersConversation = output<UserConversation>();  //username of other participant in "others" list
+  selectedConversation = output<UserConversation>();
+
 
   onSelect() {
-    if (this.conversation().id)
-      this.selectedConversation.emit(this.conversation().id as number);
-    else
-      this.selectedOthersConversation.emit(this.conversation());
+    if (this.conversation())
+      this.selectedConversation.emit(this.conversation());
   }
 
   // Get initials from the title (first letter of up to two words)

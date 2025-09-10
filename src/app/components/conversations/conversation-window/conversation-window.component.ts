@@ -34,23 +34,23 @@ import { MessageType } from '../../../enums/message-type';
 })
 export class ConversationWindowComponent implements OnInit, AfterViewChecked {
   @ViewChild('messagesList', { static: false }) messagesList!: ElementRef;
-  conversation = input.required<UserConversation>();
-
-  messages: MessageResponse[] = [];
   loading = false;
   error: string | null = null;
-  currentUserId: number | null = null;
-  messageText: string = '';
   private shouldScrollToBottom = false;
+  currentUserId: number | null = null;
+
+  conversation = input.required<UserConversation>();
+  messages: MessageResponse[] = [];
+  messageText: string = '';
+
 
   constructor(
     private conversationsService: ConversationsService,
     private authService: AuthenticationService
   ) {
     effect(() => {
-      if (this.conversation() && this.conversation().id) {
+      if (this.conversation() && this.conversation().id)
         this.loadMessages();
-      }
       else
         this.messages = [];
     });
@@ -59,6 +59,62 @@ export class ConversationWindowComponent implements OnInit, AfterViewChecked {
   ngOnInit(): void {
     this.currentUserId = this.authService.getCurrentUserId();
   }
+
+  isCurrentUserMessage(message: MessageResponse): boolean {
+    return message.senderId === this.currentUserId;
+  }
+
+  formatMessageTime(sentAt: string): string {
+    const date = new Date(sentAt);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.shouldScrollToBottom && this.messagesList) {
+      this.scrollToBottom();
+      this.shouldScrollToBottom = false;
+    }
+  }
+
+  sendMessage(): void {
+    if (!this.messageText.trim() || !this.conversation()
+      || this.currentUserId === null) return;
+
+    const recipientUserId = this.conversation().participants.find(
+      (p: Participant) => p.userId !== this.currentUserId
+    )?.userId;
+
+    if (!recipientUserId) {
+      this.error = 'Recipient not found';
+      return;
+    }
+
+    const message: SendDirectMessageRequest = {
+      senderId: this.currentUserId,
+      recipientUserId: recipientUserId,
+      content: this.messageText.trim(),
+      messageType: MessageType.Text,
+    };
+
+    const originalText = this.messageText;
+    this.messageText = '';
+    this.error = null;
+
+    this.conversationsService.sendDirectMessage(message).subscribe({
+      next: (response: MessageResponse) => {
+        this.messages.push(response);
+        this.scrollToBottom();
+
+      },
+      error: (err) => {
+        console.error('Error sending message:', err);
+        this.error = 'Failed to send message. Please try again.';
+        this.messageText = originalText;
+      },
+    });
+  }
+
+  //helpers
 
   private loadMessages(): void {
 
@@ -84,22 +140,6 @@ export class ConversationWindowComponent implements OnInit, AfterViewChecked {
       });
   }
 
-  isCurrentUserMessage(message: MessageResponse): boolean {
-    return message.senderId === this.currentUserId;
-  }
-
-  formatMessageTime(sentAt: string): string {
-    const date = new Date(sentAt);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
-  ngAfterViewChecked(): void {
-    if (this.shouldScrollToBottom && this.messagesList) {
-      this.scrollToBottom();
-      this.shouldScrollToBottom = false;
-    }
-  }
-
   private scrollToBottom(): void {
     try {
       if (this.messagesList && this.messagesList.nativeElement) {
@@ -116,50 +156,5 @@ export class ConversationWindowComponent implements OnInit, AfterViewChecked {
     } catch (err) {
       console.error('Error scrolling to bottom:', err);
     }
-  }
-
-  sendMessage(): void {
-    if (!this.messageText.trim() || !this.conversation()
-      || this.currentUserId === null) return;
-
-    const recipientUserId = this.conversation().participants.find(
-      (p: Participant) => p.userId !== this.currentUserId
-    )?.userId;
-
-    console.log(this.conversation())
-
-    console.log(recipientUserId);
-
-    if (!recipientUserId) {
-      this.error = 'Recipient not found';
-      return;
-    }
-
-    const message: SendDirectMessageRequest = {
-      senderId: this.currentUserId,
-      recipientUserId: recipientUserId,
-      content: this.messageText.trim(),
-      messageType: MessageType.Text,
-    };
-
-    const originalText = this.messageText;
-    this.messageText = '';
-    this.error = null;
-
-    this.conversationsService.sendDirectMessage(message).subscribe({
-      next: (response: MessageResponse) => {
-        console.log('Message sent successfully:', response);
-        this.messages.push(response);
-        this.scrollToBottom();
-
-      },
-      error: (err) => {
-        console.error('Error sending message:', err);
-
-        this.error = 'Failed to send message. Please try again.';
-
-        this.messageText = originalText;
-      },
-    });
   }
 }

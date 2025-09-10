@@ -18,16 +18,13 @@ import { Component, DestroyRef, effect, Input, input, output } from '@angular/co
 })
 export class ConversationListComponent {
 
-  conversationSelected = output<number>();
-  searchChanged = output<string>();
   conversations = input.required<UserConversation[]>();
-  filteredConversations: UserConversation[] = [];
   @Input({ required: true }) others!: UserConversation[];
+  conversationSelected = output<UserConversation>();
+  searchChanged = output<string>();
+  filteredConversations: UserConversation[] = [];
+  selectedConversation: UserConversation | null = null;
 
-
-  selectedConversationId: number | null = null;
-  selectedOthersConversation: UserConversation | null = null;
-  othersConversationSelected = output<UserConversation>();
 
   error: string | null = null;
 
@@ -51,16 +48,9 @@ export class ConversationListComponent {
     });
   }
 
-  onSelectConversation(conversationId: number) {
-    this.selectedConversationId = conversationId;
-    this.selectedOthersConversation = null
-    this.conversationSelected.emit(conversationId);
-  }
-
-  onSelectOthersConversation(conversation: UserConversation) {
-    this.selectedOthersConversation = conversation;
-    this.selectedConversationId = null;
-    this.othersConversationSelected.emit(conversation);
+  onSelectConversation(conversation: UserConversation) {
+    this.selectedConversation = conversation;
+    this.conversationSelected.emit(conversation);
   }
 
   onSearchInput(event: Event) {
@@ -77,28 +67,30 @@ export class ConversationListComponent {
     }
 
     this.filteredConversations = this.conversations().filter(c =>
-      c.title.toLowerCase().includes(searchValue));
+      c.title.toLowerCase().includes(searchValue) || (c.type === ConversationType.Direct &&
+        c.participants.some(p => p.userId !== this.authService.getCurrentUserId() && p.userName.toLowerCase().includes(searchValue))));
 
-    var directConverationByUserName = this.conversations().find(c =>
+
+    if (searchValue == this.authService.getCurrentUser()?.userName.toLowerCase())
+      return;
+
+    var directConverationByUserName = this.filteredConversations.find(c =>
       c.type === ConversationType.Direct &&
       c.participants.some(p => p.userId !== this.authService.getCurrentUserId() && p.userName.toLowerCase() === searchValue)
     );
 
-    if (directConverationByUserName) {
-      if (!this.filteredConversations.includes(directConverationByUserName))
-        this.filteredConversations.push(directConverationByUserName);
-    }
-    else if (searchValue !== this.authService.getCurrentUser()?.userName.toLowerCase()) {
+
+    if (!directConverationByUserName) {
       this.searchChanged.emit(searchValue);
     }
   }
 
   isSelected(conversation: UserConversation): boolean {
-    if (this.selectedConversationId)
-      return this.selectedConversationId === conversation.id;
+    if (this.selectedConversation?.id)
+      return this.selectedConversation.id === conversation.id;
 
-    if (this.selectedOthersConversation)
-      return this.selectedOthersConversation === conversation;
+    if (this.selectedConversation)
+      return this.selectedConversation === conversation;
 
     return false;
   }

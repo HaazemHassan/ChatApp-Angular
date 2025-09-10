@@ -6,29 +6,25 @@
 
   <!-- Messages Container -->
   <div class="messages-container">
-    <div *ngIf="loading" class="loading-state">
+    @if (loading) {
+    <div class="loading-state">
       <p>Loading messages...</p>
     </div>
-
-    <div *ngIf="error" class="error-state">
+    } @if (error) {
+    <div class="error-state">
       <p>{{ error }}</p>
     </div>
-
-    <div
-      *ngIf="!loading && !error && messages.length === 0"
-      class="empty-state"
-    >
+    } @if (!loading && !error && messages.length === 0) {
+    <div class="empty-state">
       <p>No messages yet. Start the conversation!</p>
     </div>
+    }
 
     <!-- Messages List -->
-    <div
-      #messagesList
-      class="messages-list"
-      *ngIf="!loading && !error && messages.length > 0"
-    >
+    @if (!loading && !error && messages.length > 0) {
+    <div #messagesList class="messages-list">
+      @for (message of messages; track message.id) {
       <div
-        *ngFor="let message of messages"
         class="message-wrapper"
         [class.current-user]="isCurrentUserMessage(message)"
         [class.other-user]="!isCurrentUserMessage(message)"
@@ -36,16 +32,18 @@
         <div class="message-bubble">
           <div class="message-content">{{ message.content }}</div>
           <div class="message-meta">
-            <span class="sender-name" *ngIf="isCurrentUserMessage(message)">
-              You
-            </span>
+            @if (isCurrentUserMessage(message)) {
+            <span class="sender-name"> You </span>
+            }
             <span class="message-time">{{
               formatMessageTime(message.sentAt)
             }}</span>
           </div>
         </div>
       </div>
+      }
     </div>
+    }
   </div>
 
   <!-- Message Input -->

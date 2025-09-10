@@ -48,26 +48,27 @@ export class ConversationWindowComponent implements OnInit, AfterViewChecked {
     private authService: AuthenticationService
   ) {
     effect(() => {
-      const conv = this.conversation();
-      if (conv) {
+      if (this.conversation() && this.conversation().id) {
         this.loadMessages();
       }
+      else
+        this.messages = [];
     });
   }
 
   ngOnInit(): void {
-    const currentUser = this.authService.getCurrentUser();
-    this.currentUserId = currentUser?.id || null;
+    this.currentUserId = this.authService.getCurrentUserId();
   }
 
   private loadMessages(): void {
-    if (!this.conversation()) return;
+
+    if (!this.conversation() || !this.conversation().id) return;
 
     this.loading = true;
     this.error = null;
 
     this.conversationsService
-      .getConversationMessages(this.conversation().id)
+      .getConversationMessages(this.conversation().id!)
       .subscribe({
         next: (response: ConversationMessagesResponse) => {
           this.messages = response.messages || [];
@@ -118,17 +119,14 @@ export class ConversationWindowComponent implements OnInit, AfterViewChecked {
   }
 
   sendMessage(): void {
-    if (
-      !this.messageText.trim() ||
-      !this.conversation() ||
-      this.currentUserId === null
-    ) {
-      return;
-    }
+    if (!this.messageText.trim() || !this.conversation()
+      || this.currentUserId === null) return;
 
     const recipientUserId = this.conversation().participants.find(
       (p: Participant) => p.userId !== this.currentUserId
     )?.userId;
+
+    console.log(this.conversation())
 
     console.log(recipientUserId);
 

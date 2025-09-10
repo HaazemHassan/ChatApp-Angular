@@ -1,4 +1,5 @@
 import { Component, input, output } from '@angular/core';
+import { UserConversation } from '../../../models/conversations/responses/user-conversations-response';
 
 @Component({
   selector: 'app-conversation-item',
@@ -8,13 +9,16 @@ import { Component, input, output } from '@angular/core';
   styleUrl: './conversation-item.component.css',
 })
 export class ConversationItemComponent {
-  conversationId = input.required<number>();
-  conversationTitle = input.required<string>();
+  conversation = input.required<UserConversation>();
   isSelected = input<boolean>(false);
-  selected = output<number>();
+  selectedConversation = output<number>();
+  selectedOthersConversation = output<UserConversation>();  //username of other participant in "others" list
 
   onSelect() {
-    this.selected.emit(this.conversationId());
+    if (this.conversation().id)
+      this.selectedConversation.emit(this.conversation().id as number);
+    else
+      this.selectedOthersConversation.emit(this.conversation());
   }
 
   // Get initials from the title (first letter of up to two words)

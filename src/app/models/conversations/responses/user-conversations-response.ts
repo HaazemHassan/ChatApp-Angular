@@ -1,16 +1,16 @@
 import { ConversationType } from '../../../enums/conversation-type';
 
 export interface Participant {
-  id: number;
+  id?: number;
   userId: number;
   userName: string;
   fullName: string;
 }
 
 export interface UserConversation {
-  id: number;
+  id?: number;
   title: string;
   type: ConversationType;
-  lastMessageAt: string;
+  lastMessageAt: string | null;
   participants: Participant[];
 }

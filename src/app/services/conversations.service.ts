@@ -6,6 +6,7 @@ import { UserConversation } from '../models/conversations/responses/user-convers
 import { environment } from '../../environments/environment';
 import { ConversationMessagesResponse, MessageResponse } from '../models/conversations/responses/conversation-messages-response';
 import { SendDirectMessageRequest } from '../models/conversations/requests/send-direct-message-request';
+import { User } from '../models/interfaces/userInterface';
 
 
 @Injectable({
@@ -74,5 +75,16 @@ export class ConversationsService {
   }
 
 
+  getUserByUsername(
+    username: string
+  ): Observable<User | null> {
+    return this.http
+      .get<ApiResponse<User>>(
+        `${this.apiUrl}/applicationuser/${username}`
+      )
+      .pipe(
+        map((res) => res.data ?? null),
+      );
+  }
 
 }

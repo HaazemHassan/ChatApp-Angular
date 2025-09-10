@@ -1,29 +1,25 @@
 <div class="conversations-container">
-  <div *ngIf="unauthorized" class="unauthorized-message">
-    <p>Please <a routerLink="/login">log in</a> to view your conversations.</p>
-  </div>
-
-  <div *ngIf="!unauthorized" class="conversations-layout">
+  <div class="conversations-layout">
     <div class="conversations-sidebar">
       <app-conversation-list
-        (conversationSelected)="onConversationSelected($event)"
         [conversations]="conversations"
+        (conversationSelected)="onConversationSelected($event)"
+        (searchChanged)="onSearchChanged($event)"
+        [others]="others"
+        (othersConversationSelected)="onOthersConversationSelected($event)"
       ></app-conversation-list>
     </div>
 
     <div class="conversation-main">
-      <app-conversation-window
-        *ngIf="selectedConversation; else selectConversation"
-        [conversation]="selectedConversation"
-      >
+      @if (selectedConversation) {
+      <app-conversation-window [conversation]="selectedConversation">
       </app-conversation-window>
-
-      <ng-template #selectConversation>
-        <div class="select-conversation-message">
-          <h3>Select a conversation to start messaging</h3>
-          <p>Choose a conversation from the list to view and send messages.</p>
-        </div>
-      </ng-template>
+      } @else {
+      <div class="select-conversation-message">
+        <h3>Select a conversation to start messaging</h3>
+        <p>Choose a conversation from the list to view and send messages.</p>
+      </div>
+      }
     </div>
   </div>
 </div>

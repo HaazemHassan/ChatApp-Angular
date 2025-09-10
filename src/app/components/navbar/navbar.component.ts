@@ -12,7 +12,7 @@ export class NavbarComponent {
   constructor(
     private authService: AuthenticationService,
     private router: Router
-  ) {}
+  ) { }
 
   isAuthenticated(): boolean {
     return this.authService.isAuthenticated();
@@ -26,7 +26,6 @@ export class NavbarComponent {
       },
       error: (error) => {
         console.error('Logout error:', error);
-        // Even if logout API fails, clear tokens and redirect
         this.authService.clearTokens();
         this.router.navigate(['/home']);
       },

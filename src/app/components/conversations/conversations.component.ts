@@ -1,3 +1,4 @@
+import { Participant, UserConversation } from './../../models/conversations/responses/user-conversations-response';
 import { ConversationsService } from './../../services/conversations.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -5,9 +6,7 @@ import { RouterModule } from '@angular/router';
 import { ConversationListComponent } from './conversation-list/conversation-list.component';
 import { ConversationWindowComponent } from './conversation-window/conversation-window.component';
 import { AuthenticationService } from '../../services/authentication.service';
-import { UserConversation } from '../../models/conversations/responses/user-conversations-response';
-
-
+import { ConversationType } from '../../enums/conversation-type';
 @Component({
   selector: 'app-conversations',
   standalone: true,
@@ -23,24 +22,17 @@ import { UserConversation } from '../../models/conversations/responses/user-conv
 export class ConversationsComponent implements OnInit {
 
   selectedConversation: UserConversation | null = null;
-  unauthorized = false;
   conversations: UserConversation[] = [];
+  others: UserConversation[] = [];
 
   constructor(private authService: AuthenticationService, private conversationsService: ConversationsService) { }
 
   ngOnInit(): void {
-    if (!this.authService.isAuthenticated()) {
-      this.unauthorized = true;
-    }
-
     this.conversationsService.getUserConversations().subscribe({
       next: (list) => {
         this.conversations = list ?? [];
       },
       error: (err) => {
-        if (err?.status === 401) {
-          this.unauthorized = true;
-        }
         console.error(err);
       },
     });
@@ -50,5 +42,39 @@ export class ConversationsComponent implements OnInit {
     this.selectedConversation = this.conversations.find(c => c.id === conversationId) || null;
   }
 
+  onOthersConversationSelected(conversation: UserConversation) {
+    this.selectedConversation = conversation;
+  }
+
+  onSearchChanged(searchValue: string) {
+
+    this.others = [];
+    this.conversationsService.getUserByUsername(searchValue).subscribe({
+      next: (user) => {
+        if (user) {
+          const currentUser = this.authService.getCurrentUser();
+          const participant1: Participant = {
+            userId: currentUser!.id,
+            userName: currentUser!.userName,
+            fullName: currentUser!.fullName
+          }
+
+          const participant2: Participant = {
+            userId: user.id,
+            userName: user.userName,
+            fullName: user.fullName
+          }
+
+          const conversation: UserConversation = {
+            title: user.fullName,
+            type: ConversationType.Direct,
+            lastMessageAt: null,
+            participants: [participant1, participant2]
+          };
+          this.others = [conversation];
+        }
+      }
+    });
+  }
 
 }

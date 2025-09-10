@@ -19,7 +19,7 @@ export class AuthenticationService {
     this.currentUser = this.getCurrentUser();
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   login(credentials: LoginRequest): Observable<ApiResponse<LoginResponse>> {
     return this.httpClient
@@ -142,6 +142,11 @@ export class AuthenticationService {
   getCurrentUser(): User | null {
     const user = localStorage.getItem('currentUser');
     return user ? (JSON.parse(user) as User) : null;
+  }
+
+  getCurrentUserId(): number | null {
+    const user = localStorage.getItem('currentUser');
+    return user ? (JSON.parse(user) as User).id : null;
   }
 
   getRefreshToken(): string | null {
